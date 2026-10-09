@@ -3,9 +3,14 @@ This program prints stdin to the screen.
 '''
 import sys
 
+CHUNK = 1024 * 1024  # 1 MiB
+
 def cat(file):
-    data = file.read()
-    sys.stdout.buffer.write(data)
+    while True:
+        chunk = file.read(CHUNK)
+        if not chunk:
+            break
+        sys.stdout.buffer.write(chunk)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
