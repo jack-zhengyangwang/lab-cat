@@ -1,16 +1,47 @@
-'''
-This program prints stdin to the screen.
-'''
 import sys
 
-def cat(file):
-    data = file.read()
-    sys.stdout.buffer.write(data)
+# Size of each chunk to read – 8 KiB is a good default.
+_CHUNK_SIZE = 8 * 1024
+
+
+def cat(file_obj):
+    """
+    Stream the contents of *file_obj* to stdout using a fixed‑size buffer.
+
+    Parameters
+    ----------
+    file_obj : file‑like object opened in binary mode
+        The source to read from.
+    """
+    # Read and write until EOF
+    while True:
+        chunk = file_obj.read(_CHUNK_SIZE)
+        if not chunk:            # EOF reached
+            break
+        sys.stdout.buffer.write(chunk)
+
+
+def main():
+    """
+    Entry point for the script.
+
+    If filenames are supplied on the command line, each file is opened
+    in binary mode and streamed to stdout.  If no filenames are given,
+    the script streams from ``stdin``.
+    """
+    if len(sys.argv) > 1:
+        # Process each file argument sequentially
+        for filename in sys.argv[1:]:
+            try:
+                with open(filename, "rb") as f:
+                    cat(f)
+            except OSError as exc:
+                # Print a friendly error but continue with other files
+                sys.stderr.write(f"cat.py: cannot open '{filename}': {exc}\n")
+    else:
+        # No arguments → read from stdin
+        cat(sys.stdin.buffer)
+
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        for filename in sys.argv[1:]:
-            with open(filename, "rb") as f:
-                cat(f)
-    else:
-        cat(sys.stdin.buffer)
+    main()
